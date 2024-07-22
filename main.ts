@@ -4,6 +4,8 @@ import puppeteer from 'puppeteer';
 // import Tesseract from 'tesseract.js';
 import fs from 'fs';
 
+import { Storage } from '@google-cloud/storage';
+
 type ClinicData = {
     title: string;
     license: string;
@@ -18,6 +20,9 @@ type ClinicData = {
 const TARGET_URL = 'https://ahis9.aphia.gov.tw/Veter/OD/HLIndex.aspx';
 const TIME_OUT = 60000;
 const WAIT_TIME = 3000;
+
+const storage = new Storage();
+const bucketName = process.env.BUCKET_NAME || 'your-default-bucket-name';
 
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -107,6 +112,10 @@ async function main() {
         const fileName = `clinics_${dateString}.json`;
 
         fs.writeFileSync(fileName, JSON.stringify(clinics, null, 2));
+
+        const bucket = storage.bucket(bucketName);
+        const file = bucket.file(`clinics_${dateString}.json`);
+        await file.save(JSON.stringify(clinics, null, 2));
 
         console.log(`資料已保存到 ${fileName}，共 ${clinics.length} 筆資料`);
 

@@ -4,12 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node main.js",
+    "build": "tsc",
+    "docker:build": "docker build --no-cache -t nodejs-crawler .",
+    "docker:run": "docker run -e BUCKET_NAME=your-bucket-name nodejs-crawler"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/storage": "^6.0.0",
     "axios": "^1.7.2",
     "cheerio": "1.0.0-rc.12",
     "fs": "0.0.1-security",
