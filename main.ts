@@ -1,6 +1,6 @@
 // import axios from 'axios';
 import cheerio from 'cheerio';
-import puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer';
 // import Tesseract from 'tesseract.js';
 import fs from 'fs';
 
@@ -18,24 +18,56 @@ type ClinicData = {
 }
 
 const TARGET_URL = 'https://ahis9.aphia.gov.tw/Veter/OD/HLIndex.aspx';
-const TIME_OUT = 60000;
+const TIME_OUT = 90000;
 const WAIT_TIME = 3000;
 
 const storage = new Storage();
-const bucketName = process.env.BUCKET_NAME || 'your-default-bucket-name';
+const bucketName = process.env.BUCKET_NAME || 'bs-crawler';
 
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+async function navigateWithRetries(page: puppeteer.Page, url: string, retries: number = 3): Promise<void> {
+    for (let i = 0; i < retries; i++) {
+        try {
+            console.log(`Attempting to navigate to ${url}, attempt ${i + 1}`);
+            await page.goto(url, { waitUntil: 'load', timeout: 0 });
+            console.log('Navigation successful');
+            return;
+        } catch (error) {
+            console.error(`Navigation failed, attempt ${i + 1} of ${retries}`);
+            if (i === retries - 1) throw error;
+            await sleep(WAIT_TIME);
+        }
+    }
+}
 
 async function main() {
     try {
         // 1. 打開瀏覽器並前往目標網頁
         // const browser = await puppeteer.launch();
-        const browser = await puppeteer.launch({ headless: false });
-        const page = await browser.newPage();
-        await page.goto(TARGET_URL, {
-            waitUntil: 'networkidle2',
-            timeout: TIME_OUT
+        const browser = await puppeteer.launch({
+            headless: true,
+            timeout: TIME_OUT,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu', '--enable-blink-features=HTMLImports'],
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable' || '/usr/bin/chromium',
         });
+
+        console.log('Navigating to target URL...');
+        const page = await browser.newPage();
+        page.setDefaultNavigationTimeout(TIME_OUT)
+        // await page.goto(TARGET_URL, {
+        //     // waitUntil: 'networkidle2',
+        //     waitUntil: "domcontentloaded",
+        //     timeout: TIME_OUT
+        // });
+
+        // await page.goto(TARGET_URL, { waitUntil: 'load', timeout: 0 }).then(() => {
+        //     console.log('success')
+        // }).catch((res) => {
+        //     console.log('fails:::', res)
+        // })
+        await navigateWithRetries(page, TARGET_URL);
+        console.log('Navigation complete.');
 
         // 2. 截取驗證碼圖片
         const captchaElement = await page.$('img#ctl00_ContentPlaceHolder1_imgValidateCode');

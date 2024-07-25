@@ -2,18 +2,20 @@
   "name": "nodejs-crawler",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node main.js",
+    "start": "ts-node main.ts",
     "build": "tsc",
-    "docker:build": "docker build --no-cache -t nodejs-crawler .",
-    "docker:run": "docker run -e BUCKET_NAME=your-bucket-name nodejs-crawler"
+    "docker:build": "docker build --no-cache --platform linux/amd64 -t nodejs-crawler .",
+    "docker:run": "docker run -e BUCKET_NAME=bs-crawler nodejs-crawler",
+    "gcp-build": "node node_modules/puppeteer/install.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
     "@google-cloud/storage": "^6.0.0",
     "axios": "^1.7.2",
     "cheerio": "1.0.0-rc.12",
