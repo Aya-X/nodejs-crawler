@@ -20,9 +20,6 @@ importers:
       cheerio:
         specifier: 1.0.0-rc.12
         version: 1.0.0-rc.12
-      express:
-        specifier: ^4.19.2
-        version: 4.19.2
       fs:
         specifier: 0.0.1-security
         version: 0.0.1-security
